@@ -1,0 +1,9 @@
+{
+  "name": "Toggle Modifiers",
+  "description": "Allows to toggle modifiers like Ctrl and Shift from the top bar",
+  "uuid": "togglemodifiers@fyde0",
+  "shell-version": [
+    "46",
+    "47"
+  ]
+}
