@@ -82,8 +82,11 @@ export default class ToggleModifier extends Extension {
 
     enable() {
 
+        // load settings
+        this._settings = this.getSettings()
+
         // buttons container
-        this._box = new St.BoxLayout({ name: 'modifiersBox' })
+        this._box = new St.BoxLayout({ name: "modifiersBox" })
         Main.panel.add_child(this._box)
 
         // set padding
@@ -102,6 +105,10 @@ export default class ToggleModifier extends Extension {
         const shiftStyle = this._shiftIndicator.get_style()
         this._shiftIndicator.set_style(style + " " + shiftStyle)
         this._refreshActor(this._shiftIndicator)
+
+        // bind button visibility to settings switch
+        this._settings.bind("show-ctrl", this._ctrlIndicator, "visible",
+            Gio.SettingsBindFlags.DEFAULT);
 
         // add to bar
         // (id, thing to add, position, container)
