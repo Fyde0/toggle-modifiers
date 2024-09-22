@@ -21,6 +21,13 @@ const modifiers = {
         iconKeyUp: "go-up-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftshift | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftshift | dotoolc"]
+    },
+    alt: {
+        key: "Alt",
+        iconKeyDown: "window-close-symbolic",
+        iconKeyUp: "go-next-symbolic",
+        commandDown: ["/bin/bash", "-c", "echo keydown leftalt | dotoolc"],
+        commandUp: ["/bin/bash", "-c", "echo keyup leftalt | dotoolc"]
     }
 }
 
@@ -58,6 +65,7 @@ const Indicator = GObject.registerClass(
                 this._subprocess(modifiers[this.modifier].commandUp)
                 this._icon.icon_name = modifiers[this.modifier].iconKeyUp
             }
+
             return Clutter.EVENT_PROPAGATE
         }
 
@@ -106,14 +114,24 @@ export default class ToggleModifier extends Extension {
         this._shiftIndicator.set_style(style + " " + shiftStyle)
         this._refreshActor(this._shiftIndicator)
 
+        this._altIndicator = new Indicator("alt")
+        const altStyle = this._altIndicator.get_style()
+        this._altIndicator.set_style(style + " " + altStyle)
+        this._refreshActor(this._altIndicator)
+
         // bind button visibility to settings switch
         this._settings.bind("show-ctrl", this._ctrlIndicator, "visible",
-            Gio.SettingsBindFlags.DEFAULT);
+            Gio.SettingsBindFlags.DEFAULT)
+        this._settings.bind("show-shift", this._shiftIndicator, "visible",
+            Gio.SettingsBindFlags.DEFAULT)
+        this._settings.bind("show-alt", this._altIndicator, "visible",
+            Gio.SettingsBindFlags.DEFAULT)
 
         // add to bar
         // (id, thing to add, position, container)
         Main.panel.addToStatusArea(this.uuid + "-ctrl", this._ctrlIndicator, 0, this._box)
         Main.panel.addToStatusArea(this.uuid + "-shift", this._shiftIndicator, 1, this._box)
+        Main.panel.addToStatusArea(this.uuid + "-alt", this._altIndicator, 2, this._box)
     }
 
     disable() {
@@ -121,6 +139,8 @@ export default class ToggleModifier extends Extension {
         this._ctrlIndicator = null
         this._shiftIndicator.destroy()
         this._shiftIndicator = null
+        this._altIndicator.destroy()
+        this._altIndicator = null
         this._box.destroy()
         this._box = null
     }

@@ -15,18 +15,34 @@ export default class ToggleModifierPreferences extends ExtensionPreferences {
         // prefs group, toggle modifiers
         const modsGroup = new Adw.PreferencesGroup({
             title: _("Modifiers"),
-            description: _("Choose which modifiers toggle buttons to show"),
+            description: _("Choose which modifiers to show"),
         })
         page.add(modsGroup)
 
+        // ctrl switch
         const ctrlSwitch = new Adw.SwitchRow({
-            title: _('Show Ctrl button'),
-            subtitle: _('Whether to show the Ctrl toggle button'),
+            title: _("Show Ctrl button")
         })
+        // add to group
         modsGroup.add(ctrlSwitch)
-
-        // bind to XML key
+        // bind to XML key in schema
         window._settings = this.getSettings()
         window._settings.bind("show-ctrl", ctrlSwitch, "active", Gio.SettingsBindFlags.DEFAULT)
+
+        // shift switch
+        const shiftSwitch = new Adw.SwitchRow({
+            title: _("Show Shift button")
+        })
+        modsGroup.add(shiftSwitch)
+        window._settings = this.getSettings()
+        window._settings.bind("show-shift", shiftSwitch, "active", Gio.SettingsBindFlags.DEFAULT)
+
+        // alt switch
+        const altSwitch = new Adw.SwitchRow({
+            title: _("Show Alt button")
+        })
+        modsGroup.add(altSwitch)
+        window._settings = this.getSettings()
+        window._settings.bind("show-alt", altSwitch, "active", Gio.SettingsBindFlags.DEFAULT)
     }
 }

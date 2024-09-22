@@ -4,5 +4,11 @@
         <key name="show-ctrl" type="b">
             <default>true</default>
         </key>
+        <key name="show-shift" type="b">
+            <default>true</default>
+        </key>
+        <key name="show-alt" type="b">
+            <default>true</default>
+        </key>
     </schema>
 </schemalist>
