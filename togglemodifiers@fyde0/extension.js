@@ -7,29 +7,29 @@ import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-const modifiers = [
-    {
+const modifiers = {
+    ctrl: {
         key: "ctrl",
         iconKeyDown: "window-close-symbolic",
         iconKeyUp: "go-bottom-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftctrl | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftctrl | dotoolc"]
     },
-    {
+    shift: {
         key: "shift",
         iconKeyDown: "window-close-symbolic",
         iconKeyUp: "go-up-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftshift | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftshift | dotoolc"]
     },
-    {
+    alt: {
         key: "alt",
         iconKeyDown: "window-close-symbolic",
         iconKeyUp: "go-next-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftalt | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftalt | dotoolc"]
     }
-]
+}
 
 const Indicator = GObject.registerClass(
     class Indicator extends PanelMenu.Button {
@@ -104,26 +104,57 @@ export default class ToggleModifier extends Extension {
         // const style = "-minimum-hpadding: 1px; -natural-hpadding: 1px;"
         const style = ""
 
-        this._indicators = []
-        modifiers.forEach((modifier, i) => {
-            // create button
-            this._indicators[modifier.key] = new Indicator(modifier)
-            // get current style and add padding to it
-            const ctrlStyle = this._indicators[modifier.key].get_style()
-            this._indicators[modifier.key].set_style(style + " " + ctrlStyle)
-            // refresh to apply style
-            this._refreshActor(this._indicators[modifier.key])
-            // bind button visibility to settings
-            this._settings.bind("show-" + modifier.key, this._indicators[modifier.key],
-                "visible", Gio.SettingsBindFlags.DEFAULT)
-            // add button to top bar (inside box)
-            // (id, object to add, position, container)
-            Main.panel.addToStatusArea(this.uuid + "-" + modifier.key, this._indicators[modifier.key], i, this._box)
-        })
+        // ctrl
+        // create button
+        this._ctrlIndicator = new Indicator(modifiers.ctrl)
+        // get current style and add padding to it
+        const ctrlStyle = this._ctrlIndicator.get_style()
+        this._ctrlIndicator.set_style(style + " " + ctrlStyle)
+        // refresh to apply style
+        this._refreshActor(this._ctrlIndicator)
+        // bind button visibility to settings
+        this._settings.bind("show-ctrl", this._ctrlIndicator,
+            "visible", Gio.SettingsBindFlags.DEFAULT)
+        // add button to top bar (inside box)
+        // (id, object to add, position, container)
+        Main.panel.addToStatusArea(this.uuid + "-ctrl", this._ctrlIndicator, 0, this._box)
+
+        // shift
+        this._shiftIndicator = new Indicator(modifiers.shift)
+        const shiftStyle = this._shiftIndicator.get_style()
+        this._shiftIndicator.set_style(style + " " + shiftStyle)
+        this._refreshActor(this._shiftIndicator)
+        this._settings.bind("show-shift", this._shiftIndicator,
+            "visible", Gio.SettingsBindFlags.DEFAULT)
+        Main.panel.addToStatusArea(this.uuid + "-shift", this._shiftIndicator, 1, this._box)
+
+        // alt
+        this._altIndicator = new Indicator(modifiers.alt)
+        const altStyle = this._altIndicator.get_style()
+        this._altIndicator.set_style(style + " " + altStyle)
+        this._refreshActor(this._altIndicator)
+        this._settings.bind("show-alt", this._altIndicator,
+            "visible", Gio.SettingsBindFlags.DEFAULT)
+        Main.panel.addToStatusArea(this.uuid + "-alt", this._altIndicator, 2, this._box)
     }
 
     disable() {
-        this._box.destroy()
-        this._box = null
+        if (this._ctrlIndicator !== null) {
+            this._ctrlIndicator.destroy()
+            this._ctrlIndicator = null
+        }
+        if (this._shiftIndicator !== null) {
+            this._shiftIndicator.destroy()
+            this._shiftIndicator = null
+        }
+        if (this._altIndicator !== null) {
+            this._altIndicator.destroy()
+            this._altIndicator = null
+        }
+        if (this._box !== null) {
+            this._box.destroy()
+            this._box = null
+        }
+        this._settings = null
     }
 }
