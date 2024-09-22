@@ -7,44 +7,47 @@ import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-const modifiers = {
-    ctrl: {
-        key: "Ctrl",
+const modifiers = [
+    {
+        key: "ctrl",
         iconKeyDown: "window-close-symbolic",
         iconKeyUp: "go-bottom-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftctrl | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftctrl | dotoolc"]
     },
-    shift: {
-        key: "Shift",
+    {
+        key: "shift",
         iconKeyDown: "window-close-symbolic",
         iconKeyUp: "go-up-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftshift | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftshift | dotoolc"]
     },
-    alt: {
-        key: "Alt",
+    {
+        key: "alt",
         iconKeyDown: "window-close-symbolic",
         iconKeyUp: "go-next-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftalt | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftalt | dotoolc"]
     }
-}
+]
 
 const Indicator = GObject.registerClass(
     class Indicator extends PanelMenu.Button {
         _init(modifier) {
-            super._init(0.0, _("Toggle " + modifiers[modifier].key))
+            // First letter uppercase
+            super._init(0.0, _("Toggle " + modifier.key.charAt(0).toUpperCase() + modifier.key.slice(1)))
+            // modifier object from modifiers array
             this.modifier = modifier
+            // toggle status
             this.active = false
 
             this._icon = new St.Icon({
-                icon_name: modifiers[this.modifier].iconKeyUp,
+                icon_name: this.modifier.iconKeyUp,
                 style_class: "system-status-icon",
             })
-
             this.add_child(this._icon)
 
+            // bind to _onClicked function
             this.connect("event", this._onClicked.bind(this))
         }
 
@@ -57,13 +60,13 @@ const Indicator = GObject.registerClass(
             // toggle modifier status
             this.active = !this.active
 
-            // run command
+            // run command and change icon
             if (this.active) {
-                this._subprocess(modifiers[this.modifier].commandDown)
-                this._icon.icon_name = modifiers[this.modifier].iconKeyDown
+                this._subprocess(this.modifier.commandDown)
+                this._icon.icon_name = this.modifier.iconKeyDown
             } else {
-                this._subprocess(modifiers[this.modifier].commandUp)
-                this._icon.icon_name = modifiers[this.modifier].iconKeyUp
+                this._subprocess(this.modifier.commandUp)
+                this._icon.icon_name = this.modifier.iconKeyUp
             }
 
             return Clutter.EVENT_PROPAGATE
@@ -101,46 +104,25 @@ export default class ToggleModifier extends Extension {
         // const style = "-minimum-hpadding: 1px; -natural-hpadding: 1px;"
         const style = ""
 
-        // create button
-        this._ctrlIndicator = new Indicator("ctrl")
-        // get current style and add padding to it
-        const ctrlStyle = this._ctrlIndicator.get_style()
-        this._ctrlIndicator.set_style(style + " " + ctrlStyle)
-        // refresh to apply style
-        this._refreshActor(this._ctrlIndicator)
-
-        this._shiftIndicator = new Indicator("shift")
-        const shiftStyle = this._shiftIndicator.get_style()
-        this._shiftIndicator.set_style(style + " " + shiftStyle)
-        this._refreshActor(this._shiftIndicator)
-
-        this._altIndicator = new Indicator("alt")
-        const altStyle = this._altIndicator.get_style()
-        this._altIndicator.set_style(style + " " + altStyle)
-        this._refreshActor(this._altIndicator)
-
-        // bind button visibility to settings switch
-        this._settings.bind("show-ctrl", this._ctrlIndicator, "visible",
-            Gio.SettingsBindFlags.DEFAULT)
-        this._settings.bind("show-shift", this._shiftIndicator, "visible",
-            Gio.SettingsBindFlags.DEFAULT)
-        this._settings.bind("show-alt", this._altIndicator, "visible",
-            Gio.SettingsBindFlags.DEFAULT)
-
-        // add to bar
-        // (id, thing to add, position, container)
-        Main.panel.addToStatusArea(this.uuid + "-ctrl", this._ctrlIndicator, 0, this._box)
-        Main.panel.addToStatusArea(this.uuid + "-shift", this._shiftIndicator, 1, this._box)
-        Main.panel.addToStatusArea(this.uuid + "-alt", this._altIndicator, 2, this._box)
+        this._indicators = []
+        modifiers.forEach((modifier, i) => {
+            // create button
+            this._indicators[modifier.key] = new Indicator(modifier)
+            // get current style and add padding to it
+            const ctrlStyle = this._indicators[modifier.key].get_style()
+            this._indicators[modifier.key].set_style(style + " " + ctrlStyle)
+            // refresh to apply style
+            this._refreshActor(this._indicators[modifier.key])
+            // bind button visibility to settings
+            this._settings.bind("show-" + modifier.key, this._indicators[modifier.key],
+                "visible", Gio.SettingsBindFlags.DEFAULT)
+            // add button to top bar (inside box)
+            // (id, object to add, position, container)
+            Main.panel.addToStatusArea(this.uuid + "-" + modifier.key, this._indicators[modifier.key], i, this._box)
+        })
     }
 
     disable() {
-        this._ctrlIndicator.destroy()
-        this._ctrlIndicator = null
-        this._shiftIndicator.destroy()
-        this._shiftIndicator = null
-        this._altIndicator.destroy()
-        this._altIndicator = null
         this._box.destroy()
         this._box = null
     }
