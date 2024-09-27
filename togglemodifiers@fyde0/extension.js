@@ -10,22 +10,22 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 const modifiers = {
     ctrl: {
         key: "ctrl",
-        iconKeyDown: "window-close-symbolic",
-        iconKeyUp: "go-bottom-symbolic",
+        iconKeyDown: "cross-symbolic",
+        iconKeyUp: "ctrl-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftctrl | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftctrl | dotoolc"]
     },
     shift: {
         key: "shift",
-        iconKeyDown: "window-close-symbolic",
-        iconKeyUp: "go-up-symbolic",
+        iconKeyDown: "cross-symbolic",
+        iconKeyUp: "shift-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftshift | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftshift | dotoolc"]
     },
     alt: {
         key: "alt",
-        iconKeyDown: "window-close-symbolic",
-        iconKeyUp: "go-next-symbolic",
+        iconKeyDown: "cross-symbolic",
+        iconKeyUp: "alt-symbolic",
         commandDown: ["/bin/bash", "-c", "echo keydown leftalt | dotoolc"],
         commandUp: ["/bin/bash", "-c", "echo keyup leftalt | dotoolc"]
     }
@@ -33,16 +33,18 @@ const modifiers = {
 
 const Indicator = GObject.registerClass(
     class Indicator extends PanelMenu.Button {
-        _init(modifier) {
+        _init(modifier, path) {
             // First letter uppercase
             super._init(0.0, _("Toggle " + modifier.key.charAt(0).toUpperCase() + modifier.key.slice(1)))
             // modifier object from modifiers array
             this.modifier = modifier
+            // extension path for icons
+            this._path = path
             // toggle status
             this.active = false
 
             this._icon = new St.Icon({
-                icon_name: this.modifier.iconKeyUp,
+                gicon: Gio.icon_new_for_string(this._path + "/icons/" + this.modifier.iconKeyUp + ".svg"),
                 style_class: "system-status-icon",
             })
             this.add_child(this._icon)
@@ -63,10 +65,10 @@ const Indicator = GObject.registerClass(
             // run command and change icon
             if (this.active) {
                 this._subprocess(this.modifier.commandDown)
-                this._icon.icon_name = this.modifier.iconKeyDown
+                this._icon.gicon = Gio.icon_new_for_string(this._path + "/icons/" + this.modifier.iconKeyDown + ".svg")
             } else {
                 this._subprocess(this.modifier.commandUp)
-                this._icon.icon_name = this.modifier.iconKeyUp
+                this._icon.gicon = Gio.icon_new_for_string(this._path + "/icons/" + this.modifier.iconKeyUp + ".svg")
             }
 
             return Clutter.EVENT_PROPAGATE
@@ -106,7 +108,7 @@ export default class ToggleModifier extends Extension {
 
         // ctrl
         // create button
-        this._ctrlIndicator = new Indicator(modifiers.ctrl)
+        this._ctrlIndicator = new Indicator(modifiers.ctrl, this.path)
         // get current style and add padding to it
         const ctrlStyle = this._ctrlIndicator.get_style()
         this._ctrlIndicator.set_style(style + " " + ctrlStyle)
@@ -120,7 +122,7 @@ export default class ToggleModifier extends Extension {
         Main.panel.addToStatusArea(this.uuid + "-ctrl", this._ctrlIndicator, 0, this._box)
 
         // shift
-        this._shiftIndicator = new Indicator(modifiers.shift)
+        this._shiftIndicator = new Indicator(modifiers.shift, this.path)
         const shiftStyle = this._shiftIndicator.get_style()
         this._shiftIndicator.set_style(style + " " + shiftStyle)
         this._refreshActor(this._shiftIndicator)
@@ -129,7 +131,7 @@ export default class ToggleModifier extends Extension {
         Main.panel.addToStatusArea(this.uuid + "-shift", this._shiftIndicator, 1, this._box)
 
         // alt
-        this._altIndicator = new Indicator(modifiers.alt)
+        this._altIndicator = new Indicator(modifiers.alt, this.path)
         const altStyle = this._altIndicator.get_style()
         this._altIndicator.set_style(style + " " + altStyle)
         this._refreshActor(this._altIndicator)
