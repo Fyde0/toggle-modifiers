@@ -44,5 +44,20 @@ export default class ToggleModifierPreferences extends ExtensionPreferences {
         modsGroup.add(altSwitch)
         window._settings = this.getSettings()
         window._settings.bind("show-alt", altSwitch, "active", Gio.SettingsBindFlags.DEFAULT)
+
+        // style group
+        const styleGroup = new Adw.PreferencesGroup({
+            title: _("Style"),
+            description: _("Re-enable extension to apply"),
+        })
+        page.add(styleGroup)
+
+        // padding
+        // min value, max value, step
+        const paddingField = Adw.SpinRow.new_with_range(0, 32, 1)
+        paddingField.set_title("Spacing between buttons")
+        styleGroup.add(paddingField)
+        window._settings = this.getSettings()
+        window._settings.bind("padding", paddingField, "value", Gio.SettingsBindFlags.DEFAULT)
     }
 }

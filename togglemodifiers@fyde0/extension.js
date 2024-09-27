@@ -97,14 +97,15 @@ export default class ToggleModifier extends Extension {
 
         // load settings
         this._settings = this.getSettings()
+        const padding = this._settings.get_int("padding")
 
         // buttons container
         this._box = new St.BoxLayout({ name: "modifiersBox" })
         Main.panel.add_child(this._box)
 
         // set padding
-        // const style = "-minimum-hpadding: 1px; -natural-hpadding: 1px;"
-        const style = ""
+        const style = "-minimum-hpadding: " + padding + "px; -natural-hpadding: " + padding + "px;"
+        // const style = ""
 
         // ctrl
         // create button
